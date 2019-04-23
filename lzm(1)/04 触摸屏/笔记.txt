@@ -1,0 +1,87 @@
+一、触摸屏
+	
+	触摸屏在linux下，也是文件	——>	使用关于文件的函数来处理触摸屏
+	
+	open read close
+	
+1）什么是事件？
+
+	当某些硬件设备（鼠标，键盘，触摸屏。。。）接入第三方平台，当这些硬件设备的状态发生改变时
+就称之为事件的发生。
+
+	例子：触摸屏被滑动了一下
+			键盘的回车键被摁下去，弹上来
+			鼠标的左键被摁下去
+			
+2）什么叫做输入子系统？
+	分析板子中的数据，转换成有意义的值（事件的类型、值）
+	
+3）触摸屏设备文件？
+	/dev/input/event0
+
+
+4）触摸屏的代码思路
+
+	4.1	访问触摸屏文件	——>	open
+		open("/dev/input/event0",O_RDONLY);
+	4.2	读取文件的数据	——>	read
+		read(fd,buf,sizeof(buf))	——>	sizeof(buf)能获取buf占用的字节数
+	
+		4.2.1	buf是什么类型的缓冲区？
+			buf的数据是与输入子系统分析出来的数据类型一致的，由于输入子系统在内核中，索引
+		类型由系统来决定，	——>	定义在linux下的一个头文件中
+	
+		4.2.2	头文件在哪里？
+		ubuntu:/usr/include/linux/input.h
+		
+		4.2.3	每当发生一个事件时，输入子系统就会分析出一个事件结构体
+
+		struct input_event {
+			struct timeval time;
+			__u16 type;
+			__u16 code;
+			__s32 value;
+		};
+		
+		结论：buf类型是一个结构体
+		
+		4.2.4	分析input_event结构体
+			struct timeval time;	——>	事件发生的时间
+			__u16 type;				——>	事件的类型（鼠标，键盘，触摸屏）
+			
+				#define EV_KEY			0x01		——>	按键事件
+				#define EV_REL			0x02		——>	鼠标事件
+				#define EV_ABS			0x03		——>	触摸屏事件
+			
+			__u16 code;				——>	对事件进一步的描述
+			
+				#define ABS_X			0x00		——>	触摸屏的X轴
+				#define ABS_Y			0x01		——>	触摸屏的Y轴
+				
+				#define BTN_TOUCH		0x14a		——>	按键触摸
+				
+			__s32 value;			——>	事件的值，是对描述的进一步补充
+				
+				ABS_X	——>	范围：0-800
+				ABS_Y	——>	范围：0-480
+		
+				BTN_TOUCH	——>	松开：0	按下：1
+
+		4.3	判断数据是否是自己想要读取的类型
+			例子：松手判断
+			if(buf.type == EV_KEY && buf.code == BTN_TOUCH && buf.value == 0)
+
+		4.4 关闭文件	——>	close
+		
+		
+练习：完成touch.c，实现使用x,y坐标判断触摸的位置
+
+	例子：
+		左上角，左下角，右上角，右下角
+
+
+		
+		
+		
+		
+		

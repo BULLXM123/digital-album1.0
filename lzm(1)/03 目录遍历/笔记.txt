@@ -1,0 +1,90 @@
+一、文件、目录
+	1.1 目录（linux才有概念）
+		目录到目录之间只是一个索引的概念，不存在包含的关系
+	
+	1.2	文件夹（windows概念）
+		文件夹就像是一个容器，里面的文件占用的空间永远不能大于该文件夹的大小
+		
+二、目录检索	——>	学习一些API
+	例子：创建一个image/目录，打印该目录下全部文件名show_dir
+	
+	2.1	访问目录：opendir	——>	man 3 opendir
+	
+		头文件：
+			#include <sys/types.h>
+			#include <dirent.h>
+			
+		函数体： 
+			DIR *opendir(const char *name);
+			
+		参数：
+			const char *name：目录的路径	——>	字符串
+			
+		返回值：
+			DIR *：return a pointer to the directory stream
+			成功：返回一个目录流指针
+			失败：NULL
+			
+	2.2	进入目录：chdir
+	
+		头文件：
+			#include <unistd.h>
+			
+		函数体： 
+			int chdir(const char *path);
+			
+		参数：
+			const char *path：目录的路径	——>	字符串
+			
+		返回值：
+			成功：0
+			失败：-1
+			
+	2.3	读取目录：readdir
+	
+		头文件：
+			#include <dirent.h>
+			
+		函数体： 
+			struct dirent *readdir(DIR *dirp);
+			
+		参数：
+			DIR *dirp：opendir函数的返回值
+			
+		返回值：
+			成功：结构体指针
+			失败：NULL
+			
+			struct dirent {
+               ino_t          d_ino;       /* inode number 索引节点号*/
+               off_t          d_off;       /* offset to the next dirent 在目录文件中的偏移*/
+               unsigned short d_reclen;    /* length of this record 文件名长*/
+               unsigned char  d_type;      /* type of file; 文件类型*/
+               char           d_name[256]; /* filename 文件名，最长是256个字节*/
+           };
+
+	2.4	关闭目录
+		
+		头文件：
+			#include <sys/types.h>
+			#include <dirent.h>
+			
+		函数体：
+			int closedir(DIR *dirp);
+		
+		参数：
+			DIR *dirp：opendir函数的返回值
+		
+		返回值：
+			成功：0
+			失败：-1
+		
+		
+作业：
+	1、利用目录遍历制作幻灯片程序
+		思路：可以把目录遍历封装成一个函数show_dir()
+		
+		
+		
+		
+			

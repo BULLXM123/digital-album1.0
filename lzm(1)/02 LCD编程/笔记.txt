@@ -1,0 +1,181 @@
+一、文件
+
+	普通文件：.doc .txt .c .zip
+	设备文件：LED灯，LCD屏，触摸屏
+	
+	——>	在linux下，一切都是文件	——>	访问文件的方式都是一致
+	
+	
+	1.1	如何访问linux文件？		例如：访问LCD屏幕文件/dev/fb0
+	
+	访问文件	——>	使用open函数
+	
+	1.1.1	学习新的函数，要注意四个点：头文件，函数体，参数，返回值
+	
+	1.2	open函数：
+	
+	头文件：
+		#include <sys/types.h>
+		#include <sys/stat.h>
+		#include <fcntl.h>
+		
+	函数体：
+		int open(const char *pathname, int flags);
+		
+	参数：
+		const char *pathname：char*就是要传一个字符串，其实就是文件的路径——>/dev/fb0
+		int flags：操作文件的权限
+			 O_RDONLY, O_WRONLY 或 O_RDWR
+				只读	只写		可读写
+		
+	返回值：
+		成功：文件描述符
+		失败：-1
+		
+	1.3	close函数
+	
+	头文件：
+		#include <unistd.h>
+
+	函数体：
+		int close(int fd);
+		
+	参数：
+		int fd：文件描述符（一般是open函数返回值）
+		
+	返回值：
+		成功：0
+		失败：-1
+		
+	1.4	mmap函数	——>	内存映射
+	
+	头文件：
+		#include <sys/mman.h>
+	
+	函数体：
+       void *mmap(void *addr, size_t length, int prot, int flags,
+                  int fd, off_t offset);
+	
+	参数：
+		void *addr：映射区的开始地址，设置为NULL时表示由系统决定映射区的起始地址
+		size_t length：映射区的长度			————>主要关注1
+		int prot：内容可以被读取和写入
+		int flags：共享内存
+		int fd：有效的文件描述符			————>主要关注2
+		off_t offset：被映射对象内容的起点
+		
+	返回值：
+		成功：映射区的首地址
+		失败：MAP_FAILED
+		
+二、LCD屏幕编程
+
+	1.	LCD屏幕文件/dev/fb0
+	
+	2.	访问LCD屏幕文件：open("/dev/fb0",O_WRONLY);
+	
+	3.	映射LCD屏幕：mmap();
+	
+		3.1	映射的区域大小
+		
+		LCD屏幕规格：
+		
+		参数：A R G B
+		
+		分辨率：800*480
+		
+		字节数：800*480* 4
+	
+	4.	写入数据：*lcd_buf = 0x00ff0000	//红色	（写入多少个像素点）
+	
+	5.	取消映射
+	
+	6.	关闭文件
+
+练习：在LCD屏幕刷出三种不同的颜色彩带
+
+	红，绿，蓝	（横刷）
+	
+	
+三、BMP图片编程
+
+	1.	24bits	bmp格式
+	
+	参数：B	G R	
+	
+	像素点：800*480
+	
+	字节数：800*480*3 = 1152000
+	
+	2.	LCD屏幕
+
+	参数：A R G B
+		
+	分辨率：800*480
+	
+	字节数：800*480* 4
+
+	思路：
+		3.1	访问test.bmp文件	——>	open函数
+		3.2	访问/dev/fb0液晶LCD屏幕	——>	open函数	mmap函数
+		3.3	读取bmp图片的数据	——>	read函数
+			read函数
+	
+			头文件：
+				#include <unistd.h>
+
+			函数体：
+				ssize_t read(int fd, void *buf, size_t count);
+				
+			参数：
+				int fd：文件描述符（一般是open函数返回值）
+				void *buf：数据缓冲区（读取的数据存放的地方）
+				size_t count：读取的字节数
+				
+			返回值：
+				成功：读取到的字节数
+				失败：-1
+				
+			3.3.1	缓冲区定义多大？
+				取决于图片的总字节数	——>	24bits bmp图片	——>	每一个像素点都是24位（3个字节）
+				——>一共有800*480*3字节	——>	char bmp_buf[800*480*3];
+			
+			3.3.2	BMP图片的颜色排布？
+				蓝，绿，红
+
+		3.4	写入bmp_buf数据到LCD屏幕上（对lcd_buf指针进行操作）
+
+			3.4.1	图片颜色错误（图片颜色数据错乱）
+			
+			3.4.2	图片上下颠倒，左右不颠倒
+				——>	bmp数据存储时，第一个字节是左下方
+				
+			3.4.3	图片有些颜色刷到屏幕左边
+				——>	54个字节的文件头
+				
+		3.5	关闭LCD与test.bmp图片，释放资源	——>	close，munmap
+		
+
+作业：
+	1.刷颜色（竖刷）（若无思路可以查看pic里的参考）
+	2.在屏幕上刷一张BMP图片
+	3.利用sleep函数尝试刷图片幻灯片
+		思路：
+			char *name = {"1.bmp","2.bmp"};
+			open(name[i++],O_RDWR);
+		
+		※sleep函数用法：sleep(int second)，second为秒数
+
+思考：
+	1.尝试将bmp.c修改为可以刷任意大小的图片的程序
+	2.尝试将刷图功能封装为函数
+
+	
+	
+	
+	
+	
+	
+	
+	
+	
